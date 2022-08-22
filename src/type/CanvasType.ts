@@ -4,10 +4,11 @@ export type CanvasDados = {
     height: number;
     widthRes: number;
     heightRes: number;
+    ftConv: number;
 }
 
 export type Forma = {
-    tipo: number; //1-> linha, 2->quadrado, 3-> circulo
+    tipo: number; //1-> linha, 2->quadrado
     cor: string;
     inicio: number[];
     fim: number[];
@@ -15,7 +16,7 @@ export type Forma = {
 }
 
 export type Config ={
-     tipo: number;//1-> linha, 2->quadrado, 3-> circulo,0->nenhum
+     tipo: number;//1-> linha, 2->quadrado,0->nenhum
      cor: string;
      grossura: number;
      corSombra: string;

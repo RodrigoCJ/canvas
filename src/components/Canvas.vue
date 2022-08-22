@@ -69,7 +69,7 @@
           id="myCanvas"
           style="position: absolute; top: 0; left: 0"
           @mousedown="mouseClick($event)"
-          @mousemove="mouveMove($event)"
+          @mousemove="desenhaTemp($event)"
         />
       </div>
     </div>
@@ -77,26 +77,26 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, reactive, ref, ssrContextKey } from 'vue';
 import { CanvasDados,Config,Forma } from "../type/CanvasType";
 import { ZoomInIcon, ZoomOutIcon } from "@heroicons/vue/solid";
 
 const escala = ref(1.0)
 const proporcaoZomm = ref(0.5)
 const habilitaZoom = ref(true)
-const dados: CanvasDados = reactive({urlImage:"",width:0,height:0,widthRes:0,heightRes:0})
-const formas: Forma = reactive([])
+const dados: CanvasDados = reactive({urlImage:"",width:0,height:0,widthRes:0,heightRes:0,ftConv:0})
+const formas: Forma[] = reactive([])
 const configuracao: Config = reactive({tipo:1,cor:"",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:0})
-const canvas:any = ref()
-const canvasTemp:any = ref()
+let canvas: CanvasRenderingContext2D
+let canvasTemp:CanvasRenderingContext2D
 const formaDesenha: Forma = reactive({tipo:0,cor:"",inicio:[],fim:[],referencia:0})
 
 
 onMounted(() => {
   let c:any = document.getElementById("myCanvas");
-  canvas.value = c.getContext("2d");
+  canvas = c.getContext("2d");
   let ct:any = document.getElementById("myCanvasTemp");
-  canvasTemp.value = ct.getContext("2d");
+  canvasTemp = ct.getContext("2d");
 
 })
 
@@ -143,8 +143,7 @@ const linha = (forma: Forma, canva:any) => {
 }
 
 //desenha um circulo no canvas, recebe como paramentro o componente canvas em qual o circulo deve ser desenhado, a coordenada [x,y], e a cor do circulo
-const circulo = (forma: Forma, canva:any) => {
-    var ctx = canva;
+const circulo = (forma: Forma, ctx:CanvasRenderingContext2D) => {
     ctx.beginPath();
     ctx.globalAlpha = configuracao.alpha;
     ctx.arc(forma.inicio[0], forma.inicio[1], configuracao.raioCirculo, 0, 2 * Math.PI);
@@ -170,20 +169,24 @@ const quadrado = (forma: Forma, canva:any) => {
 }
 
 const mouseClick = (ev: MouseEvent) => {
-    console.log("mouse click ",ev)
     switch(configuracao.tipo){
       case 1:
       case 3:
         if (formaDesenha.tipo==0){
-          formaDesenha.cor="";
+          formaDesenha.cor=configuracao.cor;
           formaDesenha.inicio.push(ev.offsetX)
           formaDesenha.inicio.push(ev.offsetY)
           formaDesenha.tipo=configuracao.tipo
-          formaDesenha.referencia=1
+          formaDesenha.referencia=1//TODO: mecher
         }
         else{
+          formaDesenha.fim = []
           formaDesenha.fim.push(ev.offsetX)
           formaDesenha.fim.push(ev.offsetY)
+          formas.push(formaDesenha)
+          formaDesenha.tipo=0;
+          clearCanvas(canvasTemp)
+          desenhaPerm()
         }
         console.log("forma desenha ",formaDesenha)
       break;
@@ -193,15 +196,23 @@ const mouseClick = (ev: MouseEvent) => {
 
 }
 
-const mouveMove = (ev: MouseEvent) => {
-console.log("mouse move ",ev)
-}
-
-const desenhaTemp = () => {
+const desenhaTemp = (ev: MouseEvent) => {
+  switch (formaDesenha.tipo){
+    case 1:
+      circulo(formaDesenha,canvasTemp)
+      formaDesenha.fim = []
+      formaDesenha.fim.push(ev.offsetX);
+      formaDesenha.fim.push(ev.offsetY);
+      linha(formaDesenha,canvasTemp)
+    break;
+    case 2:
+    break;
+  }
 
 }
 
 const desenhaPerm = () => {
+  clearCanvas(canvas)
 
 }
 
@@ -241,21 +252,32 @@ const inicia = (url:string, width: number, height: number) => {
   img.onload = () => {
   dados.width = img.width;
   dados.height = img.height;
-  var ftConv = dados.width / dados.height
+  dados.ftConv= dados.width / dados.height
 
   if(dados.width>=dados.height){
     dados.widthRes=width;
-    dados.heightRes = Math.round(height/ftConv)
+    dados.heightRes = Math.round(height/dados.ftConv)
   }
   else if(dados.height>dados.width){
     dados.heightRes=height;
-    dados.widthRes = Math.round(width*ftConv)
+    dados.widthRes = Math.round(width*dados.ftConv)
   }
 
   configuraCanvas()
   }
 }
 
-    
+const clearCanvas = (cv: any) => {
+  cv.clearRect(0, 0, dados.widthRes, dados.heightRes);
+}
+
+defineExpose({
+  inicia
+})
 
 </script>
+
+
+
+//TODO: desenha
+//TODO: recebe a lista de pragas
