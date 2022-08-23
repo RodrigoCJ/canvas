@@ -83,6 +83,7 @@ import { ZoomInIcon, ZoomOutIcon } from "@heroicons/vue/solid";
 
 const escala = ref(1.0) 
 const proporcaoZomm = ref(0.5)
+let formaCont = 0
 const dados: Dados = reactive({urlImage:"",width:0,height:0,widthRes:0,heightRes:0,ftConv:0})
 const formas = ref<Forma[]>([]) 
 const configuracao: Configuracao = reactive({tipo:"linha",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:1,habilitaConf:true,habilitaZoom: true})
@@ -176,7 +177,7 @@ const mouseClick = (ev: MouseEvent) => {
         if(formaDesenha.value == undefined || formaDesenha.value.fim == undefined){
           const formaN = {
             cor: configuracao.cor,
-            referencia:1,     //TODO: mecher
+            referencia: formaCont,
             tipo: configuracao.tipo,
             inicio:pontos
           } as Forma
@@ -188,7 +189,7 @@ const mouseClick = (ev: MouseEvent) => {
           if (continuaDesen()){
             const formaN = {
             cor: configuracao.cor,
-            referencia:1,     //TODO: mecher
+            referencia: formaCont,
             tipo: configuracao.tipo,
             inicio:formaDesenha.value.fim
           } as Forma
@@ -197,11 +198,10 @@ const mouseClick = (ev: MouseEvent) => {
             formaDesenha.value = undefined
           }
           clearCanvas(canvasTemp)
-          desenhaPerm()
+          desenhaPerm(formas.value)
         }
       break; 
     }
-
 }
 
 //desenha no canvas temporario, o preview da forma, evento onMove do mouse
@@ -225,8 +225,8 @@ const desenhaTemp = (ev: MouseEvent) => {
 }
 
 //desenha no canvas permanente a lista de formas
-const desenhaPerm = () => {
-  for(let value of formas.value){
+const desenhaPerm = (frm: Forma[]) => {
+  for(let value of frm){
     switch(value.tipo){
       case "linha":
         circulo(value,canvas)
@@ -301,10 +301,23 @@ const clearCanvas = (cv: any) => {
 const continuaDesen = () => {
     switch(configuracao.tipo){
       case "linha":
-        
-        return true
+        let formaTot: Forma[] = formas.value.filter(e => e.referencia == formaCont)
+        console.log("formaTot ",formaTot)
+        if (
+            formaDesenha.value != null &&
+            formaDesenha.value.fim[0] >= formaTot[0].inicio[0] - configuracao.raioCirculo &&
+            formaDesenha.value.fim[0] <= formaTot[0].inicio[0] + configuracao.raioCirculo &&
+            formaDesenha.value.fim[1] >= formaTot[0].inicio[1] - configuracao.raioCirculo &&
+            formaDesenha.value.fim[1] <= formaTot[0].inicio[1] + configuracao.raioCirculo
+          ) {
+            formaCont++ 
+            return false
+          } else {
+            return true
+          }
       break;
       case "quadrado":
+        formaCont++
         return false
       break;
     }
