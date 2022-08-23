@@ -1,4 +1,4 @@
-export type CanvasDados = {
+export type Dados = {
     urlImage: string;
     width: number;
     height: number;
@@ -15,7 +15,7 @@ export type Forma = {
     referencia: number;
 }
 
-export type Config ={
+export type Configuracao ={
      tipo: "quadrado"|"linha"|"nada";//1-> linha, 2->quadrado,0->nenhum
      cor: string;
      grossura: number;
@@ -23,4 +23,5 @@ export type Config ={
      sombra: number;
      raioCirculo: number;
      alpha: number;
+     continuo: boolean;
 }

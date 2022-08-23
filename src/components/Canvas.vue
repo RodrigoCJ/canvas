@@ -78,15 +78,15 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { CanvasDados,Config,Forma } from "../type/CanvasType";
+import { Dados,Configuracao,Forma } from "../type/CanvasType";
 import { ZoomInIcon, ZoomOutIcon } from "@heroicons/vue/solid";
 
 const escala = ref(1.0) 
 const proporcaoZomm = ref(0.5)
 const habilitaZoom = ref(true)
-const dados: CanvasDados = reactive({urlImage:"",width:0,height:0,widthRes:0,heightRes:0,ftConv:0})
+const dados: Dados = reactive({urlImage:"",width:0,height:0,widthRes:0,heightRes:0,ftConv:0})
 const formas = ref<Forma[]>([]) 
-const configuracao: Config = reactive({tipo:"linha",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:1})
+const configuracao: Configuracao = reactive({tipo:"linha",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:1,continuo:true})
 let canvas: CanvasRenderingContext2D
 let canvasTemp:CanvasRenderingContext2D
 const formaDesenha = ref<Forma>() 
@@ -128,6 +128,7 @@ const atualizaEscala = () => {
 
 //desenha um linha no canvas, recebe como paramentro o componente canvas em qual a linha deve ser desenhada, um coordenada inicial [x,y], uma coordenada final [x,y] e a cor da linha
 const linha = (forma: Forma, canva:CanvasRenderingContext2D) => {
+    console.log("desenha linha ",forma.inicio," fim ",forma.fim)
     var ctx = canva;
     ctx.beginPath();
     ctx.globalAlpha = configuracao.alpha;
@@ -143,6 +144,7 @@ const linha = (forma: Forma, canva:CanvasRenderingContext2D) => {
 
 //desenha um circulo no canvas, recebe como paramentro o componente canvas em qual o circulo deve ser desenhado, a coordenada [x,y], e a cor do circulo
 const circulo = (forma: Forma, canva:CanvasRenderingContext2D) => {
+    console.log("desenha circulo ",forma.inicio)
     var ctx = canva;
     ctx.beginPath();
     ctx.globalAlpha = configuracao.alpha;
@@ -168,11 +170,12 @@ const quadrado = (forma: Forma, canva:CanvasRenderingContext2D) => {
     ctx.closePath();
 }
 
+//trata o evento do clic do mouse, o que vai ser desenhado na tela
 const mouseClick = (ev: MouseEvent) => {
     switch(configuracao.tipo){
       case "linha":
       case "quadrado":
-        if(formaDesenha.value == undefined){
+        if(formaDesenha.value == undefined || formaDesenha.value.fim == undefined){
           let pontos: number[] =[ev.offsetX,ev.offsetY]
           const formaN = {
             cor: configuracao.cor,
@@ -186,11 +189,20 @@ const mouseClick = (ev: MouseEvent) => {
           let pontos: number[] =[ev.offsetX,ev.offsetY]
           formaDesenha.value.fim=pontos
           formas.value.push(formaDesenha.value)
-          formaDesenha.value = undefined
+          if (configuracao.continuo){
+            const formaN = {
+            cor: configuracao.cor,
+            referencia:1,     //TODO: mecher
+            tipo: configuracao.tipo,
+            inicio:formaDesenha.value.fim
+          } as Forma
+          formaDesenha.value = formaN
+          }else{
+            formaDesenha.value = undefined
+          }
           clearCanvas(canvasTemp)
           desenhaPerm()
         }
-        console.log("forma desenhada ",formaDesenha.value)
       break; 
     }
 
@@ -215,11 +227,11 @@ const desenhaTemp = (ev: MouseEvent) => {
 
 const desenhaPerm = () => {
   console.log("desenha perm",formas)
-  clearCanvas(canvas)
   for(let value of formas.value){
     switch(value.tipo){
       case "linha":
         circulo(value,canvas)
+        console.log("Desenha linha permanente ",value)
         linha(value,canvas)
       break;
     }
