@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="flex justify-center align-middle mb-5" v-if="habilitaZoom==true">
+    <div class="flex justify-center align-middle mb-5" v-if="configuracao.habilitaZoom==true">
       <div class="text-right text-sm">
         <button
           @click="zoomOut"
@@ -83,22 +83,21 @@ import { ZoomInIcon, ZoomOutIcon } from "@heroicons/vue/solid";
 
 const escala = ref(1.0) 
 const proporcaoZomm = ref(0.5)
-const habilitaZoom = ref(true)
 const dados: Dados = reactive({urlImage:"",width:0,height:0,widthRes:0,heightRes:0,ftConv:0})
 const formas = ref<Forma[]>([]) 
-const configuracao: Configuracao = reactive({tipo:"linha",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:1,continuo:true})
+const configuracao: Configuracao = reactive({tipo:"quadrado",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:1,habilitaConf:true,habilitaZoom: true})
 let canvas: CanvasRenderingContext2D
 let canvasTemp:CanvasRenderingContext2D
 const formaDesenha = ref<Forma>() 
 
-
+//pega as refencias dos canvas, e registra o listener do teclado
 onMounted(() => {
   let c:any = document.getElementById("myCanvas");
   canvas = c.getContext("2d");
   let ct:any = document.getElementById("myCanvasTemp");
   canvasTemp = ct.getContext("2d");
+  document.addEventListener("keyup", tecladoEvent);
 })
-
 
 //diminui o zoom do componente canvas
 const zoomOut = () => {
@@ -128,7 +127,6 @@ const atualizaEscala = () => {
 
 //desenha um linha no canvas, recebe como paramentro o componente canvas em qual a linha deve ser desenhada, um coordenada inicial [x,y], uma coordenada final [x,y] e a cor da linha
 const linha = (forma: Forma, canva:CanvasRenderingContext2D) => {
-    console.log("desenha linha ",forma.inicio," fim ",forma.fim)
     var ctx = canva;
     ctx.beginPath();
     ctx.globalAlpha = configuracao.alpha;
@@ -144,7 +142,6 @@ const linha = (forma: Forma, canva:CanvasRenderingContext2D) => {
 
 //desenha um circulo no canvas, recebe como paramentro o componente canvas em qual o circulo deve ser desenhado, a coordenada [x,y], e a cor do circulo
 const circulo = (forma: Forma, canva:CanvasRenderingContext2D) => {
-    console.log("desenha circulo ",forma.inicio)
     var ctx = canva;
     ctx.beginPath();
     ctx.globalAlpha = configuracao.alpha;
@@ -189,7 +186,7 @@ const mouseClick = (ev: MouseEvent) => {
           let pontos: number[] =[ev.offsetX,ev.offsetY]
           formaDesenha.value.fim=pontos
           formas.value.push(formaDesenha.value)
-          if (configuracao.continuo){
+          if (continuaDesen()){
             const formaN = {
             cor: configuracao.cor,
             referencia:1,     //TODO: mecher
@@ -208,66 +205,44 @@ const mouseClick = (ev: MouseEvent) => {
 
 }
 
+//desenha no canvas temporario, o preview da forma, evento onMove do mouse
 const desenhaTemp = (ev: MouseEvent) => {
   if(formaDesenha.value != undefined){
+    let pontos: number[] =[ev.offsetX,ev.offsetY]
     switch (formaDesenha.value.tipo){
       case "linha":
         clearCanvas(canvasTemp)
         circulo(formaDesenha.value,canvasTemp)
-        let pontos: number[] =[ev.offsetX,ev.offsetY]
         formaDesenha.value.fim = pontos
         linha(formaDesenha.value,canvasTemp)
       break;
       case "quadrado":
+        clearCanvas(canvasTemp)
+        formaDesenha.value.fim = pontos
+        quadrado(formaDesenha.value,canvasTemp)
       break;
   }
   }
-
 }
 
+//desenha no canvas permanente a lista de formas
 const desenhaPerm = () => {
   console.log("desenha perm",formas)
   for(let value of formas.value){
     switch(value.tipo){
       case "linha":
         circulo(value,canvas)
-        console.log("Desenha linha permanente ",value)
         linha(value,canvas)
+      break;
+      case "quadrado":
+        quadrado(value,canvas)
       break;
     }
   }
 
 }
 
-const configuraCanvas = () => {
-  var myCanvas: any = document.getElementById("myCanvas")
-  if(myCanvas){
-    myCanvas.width = dados.widthRes
-    myCanvas.height = dados.heightRes;
-  }
-  var myCanvasTemp: any = document.getElementById("myCanvasTemp")
-  if(myCanvas){
-    myCanvasTemp.width = dados.widthRes
-    myCanvasTemp.height = dados.heightRes;
-  }
-  var img: any = document.getElementById("img")
-  if(myCanvas){
-    img.style.width = dados.widthRes + "px";
-    img.style.height = dados.heightRes + "px";
-  }  
-  var principal: any = document.getElementById("principal")
-  if(myCanvas){
-    principal.style.width = dados.widthRes + "px";
-    principal.style.height = dados.heightRes + "px";
-  }
-  var baseDiv: any = document.getElementById("baseDiv")
-  if(myCanvas){
-    baseDiv.style.width = dados.widthRes + "px";
-    baseDiv.style.height = dados.heightRes + "px";
-  }
-
-}
-
+//configura o canvas, ajustando a imagem, e calculando o tamanho do componente, e definindo o tamanho da imagem e do componente de acordo com o parametro, mantendo a proporcao
 const inicia = (url:string, width: number, height: number) => {
   dados.urlImage = url;
   var img = new Image();
@@ -285,22 +260,85 @@ const inicia = (url:string, width: number, height: number) => {
     dados.heightRes=height;
     dados.widthRes = Math.round(width*dados.ftConv)
   }
-
-  configuraCanvas()
+  let myCanvas: any = document.getElementById("myCanvas")
+  if(myCanvas){
+    myCanvas.width = dados.widthRes
+    myCanvas.height = dados.heightRes;
+  }
+  let myCanvasTemp: any = document.getElementById("myCanvasTemp")
+  if(myCanvasTemp){
+    myCanvasTemp.width = dados.widthRes
+    myCanvasTemp.height = dados.heightRes;
+  }
+  let img: any = document.getElementById("img")
+  if(img){
+    img.style.width = dados.widthRes + "px";
+    img.style.height = dados.heightRes + "px";
+  }  
+  let principal: any = document.getElementById("principal")
+  if(principal){
+    principal.style.width = dados.widthRes + "px";
+    principal.style.height = dados.heightRes + "px";
+  }
+  let baseDiv: any = document.getElementById("baseDiv")
+  if(baseDiv){
+    baseDiv.style.width = dados.widthRes + "px";
+    baseDiv.style.height = dados.heightRes + "px";
+  }
   }
 }
 
+//limpa os dados do canvas
 const clearCanvas = (cv: any) => {
   cv.clearRect(0, 0, dados.widthRes, dados.heightRes);
 }
 
+//verifica se deve continuar o desenho atual, caso quadrado -> nao, caso linha se o clic for no mesmo que o do ponto inicial -> nao, caso contrario -> sim
+const continuaDesen = () => {
+    switch(configuracao.tipo){
+      case "linha":
+        //TODO: verificar se clicou no ponto inicial e se clicou, retorna false
+        return true
+      break;
+      case "quadrado":
+        return false
+      break;
+    }
+}
+
+//trata o evento on clic do teclado
+const tecladoEvent = (event: any) => {
+  //ctrl + z
+  if (event.ctrlKey && event.key === "z") {
+    console.log("ctrl + z")
+  }
+}
+
+//importa formas do componente pai para o canvas
+const importaFormas = () =>{
+  //TODO: fazer a importacao de formas
+}
+
+//exporta as formas do canvas para o componente pai
+const exportaFormas = () =>{
+  //TODO: fazer a exportacao de formas
+}
+
+//apaga uma forma da lista de formas
+const deletaForma = (referencia: number) => {
+  //TODO: fazer a deleção de forma
+}
+
+const configuraCanvas = (confs: Configuracao) => {
+  //TODO: receber as confs
+}
+
 defineExpose({
-  inicia
+  inicia,
+  importaFormas,
+  exportaFormas,
+  deletaForma,
+  configuraCanvas
 })
 
 </script>
-
-
-
-//TODO: desenha
-//TODO: recebe a lista de pragas

@@ -23,5 +23,6 @@ export type Configuracao ={
      sombra: number;
      raioCirculo: number;
      alpha: number;
-     continuo: boolean;
+     habilitaZoom: boolean;
+     habilitaConf: boolean;
 }
