@@ -174,11 +174,12 @@ const mouseClick = (ev: MouseEvent) => {
       case "linha":
       case "quadrado":
         let pontos: number[] =[ev.offsetX,ev.offsetY]
-        if(formaDesenha.value == undefined || formaDesenha.value.fim == undefined){
+        if(formaDesenha.value == undefined || formaDesenha.value.fim == []){
           const formaN = {
             cor: configuracao.cor,
             referencia: formaCont,
             tipo: configuracao.tipo,
+            fim: [],
             inicio:pontos
           } as Forma
           formaDesenha.value = formaN
@@ -191,7 +192,8 @@ const mouseClick = (ev: MouseEvent) => {
             cor: configuracao.cor,
             referencia: formaCont,
             tipo: configuracao.tipo,
-            inicio:formaDesenha.value.fim
+            inicio:formaDesenha.value.fim,
+            fim: [],
           } as Forma
           formaDesenha.value = formaN
           }else{
@@ -226,6 +228,7 @@ const desenhaTemp = (ev: MouseEvent) => {
 
 //desenha no canvas permanente a lista de formas
 const desenhaPerm = (frm: Forma[]) => {
+  clearCanvas(canvas)
   for(let value of frm){
     switch(value.tipo){
       case "linha":
@@ -237,7 +240,6 @@ const desenhaPerm = (frm: Forma[]) => {
       break;
     }
   }
-
 }
 
 const configura = () => {
@@ -292,7 +294,7 @@ const inicia = (url:string, width: number, height: number) => {
   }
 }
 
-//limpa os dados do canvas
+//limpa os dados do canvasformas.value
 const clearCanvas = (cv: any) => {
   cv.clearRect(0, 0, dados.widthRes, dados.heightRes);
 }
@@ -302,7 +304,6 @@ const continuaDesen = () => {
     switch(configuracao.tipo){
       case "linha":
         let formaTot: Forma[] = formas.value.filter(e => e.referencia == formaCont)
-        console.log("formaTot ",formaTot)
         if (
             formaDesenha.value != null &&
             formaDesenha.value.fim[0] >= formaTot[0].inicio[0] - configuracao.raioCirculo &&
@@ -326,9 +327,16 @@ const continuaDesen = () => {
 //trata o evento on clic do teclado
 const tecladoEvent = (event: any) => {
   //ctrl + z
+    //TODO: tratar
   if (event.ctrlKey && event.key === "z") {
     console.log("ctrl + z")
-    //TODO: tratar
+    if (formas.value[formas.value.length-1].referencia==formaCont){
+      var temp = formas.value.pop()
+      console.log("temp",temp)
+      temp.fim = [] 
+      formaDesenha.value = temp
+      desenhaPerm(formas.value)
+    }
   }
 }
 
