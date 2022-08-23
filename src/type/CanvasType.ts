@@ -16,7 +16,7 @@ export type Forma = {
 }
 
 export type Configuracao ={
-     tipo: "quadrado"|"linha"|"nada";//1-> linha, 2->quadrado,0->nenhum
+     tipo: "quadrado"|"linha"|"nada";
      cor: string;
      grossura: number;
      corSombra: string;

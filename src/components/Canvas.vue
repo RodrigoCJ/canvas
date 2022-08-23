@@ -85,7 +85,7 @@ const escala = ref(1.0)
 const proporcaoZomm = ref(0.5)
 const dados: Dados = reactive({urlImage:"",width:0,height:0,widthRes:0,heightRes:0,ftConv:0})
 const formas = ref<Forma[]>([]) 
-const configuracao: Configuracao = reactive({tipo:"quadrado",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:1,habilitaConf:true,habilitaZoom: true})
+const configuracao: Configuracao = reactive({tipo:"linha",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:1,habilitaConf:true,habilitaZoom: true})
 let canvas: CanvasRenderingContext2D
 let canvasTemp:CanvasRenderingContext2D
 const formaDesenha = ref<Forma>() 
@@ -172,8 +172,8 @@ const mouseClick = (ev: MouseEvent) => {
     switch(configuracao.tipo){
       case "linha":
       case "quadrado":
+        let pontos: number[] =[ev.offsetX,ev.offsetY]
         if(formaDesenha.value == undefined || formaDesenha.value.fim == undefined){
-          let pontos: number[] =[ev.offsetX,ev.offsetY]
           const formaN = {
             cor: configuracao.cor,
             referencia:1,     //TODO: mecher
@@ -183,7 +183,6 @@ const mouseClick = (ev: MouseEvent) => {
           formaDesenha.value = formaN
         }
         else{
-          let pontos: number[] =[ev.offsetX,ev.offsetY]
           formaDesenha.value.fim=pontos
           formas.value.push(formaDesenha.value)
           if (continuaDesen()){
@@ -227,7 +226,6 @@ const desenhaTemp = (ev: MouseEvent) => {
 
 //desenha no canvas permanente a lista de formas
 const desenhaPerm = () => {
-  console.log("desenha perm",formas)
   for(let value of formas.value){
     switch(value.tipo){
       case "linha":
@@ -238,6 +236,35 @@ const desenhaPerm = () => {
         quadrado(value,canvas)
       break;
     }
+  }
+
+}
+
+const configura = () => {
+  var myCanvas: any = document.getElementById("myCanvas")
+  if(myCanvas){
+    myCanvas.width = dados.widthRes
+    myCanvas.height = dados.heightRes;
+  }
+  var myCanvasTemp: any = document.getElementById("myCanvasTemp")
+  if(myCanvas){
+    myCanvasTemp.width = dados.widthRes
+    myCanvasTemp.height = dados.heightRes;
+  }
+  var img: any = document.getElementById("img")
+  if(myCanvas){
+    img.style.width = dados.widthRes + "px";
+    img.style.height = dados.heightRes + "px";
+  }  
+  var principal: any = document.getElementById("principal")
+  if(myCanvas){
+    principal.style.width = dados.widthRes + "px";
+    principal.style.height = dados.heightRes + "px";
+  }
+  var baseDiv: any = document.getElementById("baseDiv")
+  if(myCanvas){
+    baseDiv.style.width = dados.widthRes + "px";
+    baseDiv.style.height = dados.heightRes + "px";
   }
 
 }
@@ -260,31 +287,8 @@ const inicia = (url:string, width: number, height: number) => {
     dados.heightRes=height;
     dados.widthRes = Math.round(width*dados.ftConv)
   }
-  let myCanvas: any = document.getElementById("myCanvas")
-  if(myCanvas){
-    myCanvas.width = dados.widthRes
-    myCanvas.height = dados.heightRes;
-  }
-  let myCanvasTemp: any = document.getElementById("myCanvasTemp")
-  if(myCanvasTemp){
-    myCanvasTemp.width = dados.widthRes
-    myCanvasTemp.height = dados.heightRes;
-  }
-  let img: any = document.getElementById("img")
-  if(img){
-    img.style.width = dados.widthRes + "px";
-    img.style.height = dados.heightRes + "px";
-  }  
-  let principal: any = document.getElementById("principal")
-  if(principal){
-    principal.style.width = dados.widthRes + "px";
-    principal.style.height = dados.heightRes + "px";
-  }
-  let baseDiv: any = document.getElementById("baseDiv")
-  if(baseDiv){
-    baseDiv.style.width = dados.widthRes + "px";
-    baseDiv.style.height = dados.heightRes + "px";
-  }
+
+  configura()
   }
 }
 
@@ -297,7 +301,7 @@ const clearCanvas = (cv: any) => {
 const continuaDesen = () => {
     switch(configuracao.tipo){
       case "linha":
-        //TODO: verificar se clicou no ponto inicial e se clicou, retorna false
+        
         return true
       break;
       case "quadrado":
@@ -311,6 +315,7 @@ const tecladoEvent = (event: any) => {
   //ctrl + z
   if (event.ctrlKey && event.key === "z") {
     console.log("ctrl + z")
+    //TODO: tratar
   }
 }
 
