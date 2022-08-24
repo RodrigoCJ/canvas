@@ -1,103 +1,98 @@
 <template>
-  <Configuracoes
-    class="flex h-screen"
-    @close="showConf = false"
-    v-if="showConf"
-    @drawConfigs="configuraCanvas"
-    :drawConfiguration="configuracao"
-  />
   <div>
-    <div class="flex justify-center align-middle mb-5" v-if="configuracao.habilitaZoom==true">
-      <div class="text-right text-sm">
-        <button
-          @click="zoomOut"
-          class="
-            p-4
-            bg-transparent
-            border-2 border-green-500
-            text-green-500 text-lg
-            rounded-full
-            hover:bg-green-500 hover:text-gray-100
-          "
-        >
-          <span class="flex justify-center align-middle">
-            ZOOM OUT
-          </span>
-        </button>
-      </div>
-      <div class="text-right text-sm">
-        <button
-          @click="zoomRedefinir"
-          v-if="escala > 1.0"
-          class="
-            p-4
-            mx-4
-            bg-transparent
-            border-2 border-green-500
-            text-green-500 text-lg
-            rounded-lg
-            hover:bg-green-500 hover:text-gray-100
-            focus:border-4 focus:border-green-300
-          "
-        >
-          <span class="flex px-2 justify-center align-middle">
-           REDEFINIR
-          </span>
-        </button>
-      </div>
-      <div class="text-right text-sm" v-if="escala > 1.0">
-        <button
-          @click="zoomIn"
-          class="
-            p-4
-            bg-transparent
-            border-2 border-green-500
-            text-green-500 text-lg
-            rounded-full
-            hover:bg-green-500 hover:text-gray-100
-          "
-        >
-          <span class="flex justify-center align-middle">
-            ZOOM IN
-          </span>
-        </button>
-      </div>
-    </div>
-    <div class="flex justify-center align-middle mb-5" v-if="configuracao.habilitaConf==true">
-      <div class="text-right text-sm">
-        <button
-          @click="showConf = !showConf"
-          class="
-            p-4
-            bg-transparent
-            border-2 border-green-500
-            text-green-500 text-lg
-            rounded-full
-            hover:bg-green-500 hover:text-gray-100
-          "
-        >
-          <span class="flex justify-center align-middle">
-            CONFIGURACAO
-          </span>
-        </button>
-      </div>
-    </div>
-
-    <!-- canvas -->
     <div id="baseDiv" class="baseDiv" style="overflow: none; width: 600px; height: 600px">
-      <div
-        id="principal"
-        style="position: relative; display: inline-block; transform-origin: 0% 0%"
-      >
+      <div id="principal" style="position: relative; display: inline-block; transform-origin: 0% 0%">
         <img id="img" :src="dados.urlImage" style="grid-column: 1; grid-row: 1" alt="" />
         <canvas id="myCanvasTemp" style="position: absolute; top: 0; left: 0" />
         <canvas
           id="myCanvas"
           style="position: absolute; top: 0; left: 0"
           @mousedown="mouseClick($event)"
-          @mousemove="desenhaTemp($event)"
-        />
+          @mousemove="desenhaTemp($event)"/>
+
+        <!-- incones de confs -->
+        <div class="absolute bottom-0 right-0 grid grid-cols-1">
+          <button class="w-6 bg-white rounded-full mb-2 mr-2 p-1" v-if="configuracao.habilitaZoom" @click="zoomIn()">
+            <MinusIcon></MinusIcon>
+          </button>
+          <button class="w-6 bg-white rounded-full mb-2 mr-2 p-1" v-if="configuracao.habilitaZoom" @click="zoomOut()">
+            <PlusIcon></PlusIcon>
+          </button>
+          <button class="w-6 bg-white rounded-full mb-2 mr-2 p-1" v-if="configuracao.habilitaConf" @click="showConf =! showConf">
+            <CogIcon></CogIcon>
+          </button>
+        </div>
+
+        <!-- exibe as configuracoes -->
+        <div class="absolute bottom-2 right-10 bg-white p-5" v-if="showConf">
+          <!-- grossura traco -->
+          <label class="form-label">grossura</label>
+          <input type="range" min="0" max="20" style="background-color: #4aa9b6" v-model="configuracao.grossura" class="
+                form-range
+                appearance-none
+                w-full
+                h-1
+                p-0
+                rounded-xl
+                focus:outline-none focus:ring-0 focus:shadow-none
+              " id="rangeCircleRadius" />
+            <p>{{ configuracao.grossura }}</p>
+
+          <!-- raio circulo -->
+          <label class="form-label">raio circulo</label>
+          <input type="range" in="3" max="20" style="background-color: #4aa9b6" v-model="configuracao.raioCirculo" class="
+                form-range
+                appearance-none
+                w-full
+                h-1
+                p-0
+                rounded-xl
+                focus:outline-none focus:ring-0 focus:shadow-none
+              " id="rangeCircleRadius" />
+            <p>{{ configuracao.raioCirculo }}</p>
+
+          <!-- sombra -->
+          <label for="alphaCircleRadius" class="form-label">sombra</label>
+          <input type="range" min="0" max="30" style="background-color: #4aa9b6" v-model="configuracao.sombra" class="
+                form-range
+                appearance-none
+                w-full
+                h-1
+                p-0
+                rounded-xl
+                focus:outline-none focus:ring-0 focus:shadow-none
+              " id="rangeCircleRadius" />
+            <p>{{ configuracao.sombra }}</p>
+
+          <!-- transparencia circulo -->
+          <label for="alphaCircleRadius" class="form-label">transparencia circulo</label>
+          <input type="range" min="0.05" step="0.01" max="1" style="background-color: #4aa9b6" v-model="configuracao.alphaCirculo" class="
+                form-range
+                appearance-none
+                w-full
+                h-1
+                p-0
+                rounded-xl
+                focus:outline-none focus:ring-0 focus:shadow-none
+              " id="rangeCircleRadius" />
+            <p>{{ configuracao.alphaCirculo }}</p>  
+
+          <!-- transparencia linha -->
+          <label for="alphaCircleRadius" class="form-label">transparencia linha</label>
+          <input type="range" min="0.05" step="0.01" max="1" style="background-color: #4aa9b6" v-model="configuracao.alphaLinha" class="
+                form-range
+                appearance-none
+                w-full
+                h-1
+                p-0
+                rounded-xl
+                focus:outline-none focus:ring-0 focus:shadow-none
+              " id="rangeCircleRadius" />
+            <p>{{ configuracao.alphaLinha }}</p>                                 
+        </div>
       </div>
+
+      
     </div>
   </div>
 </template>
@@ -105,15 +100,16 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { Dados,Configuracao,Forma } from "../type/CanvasType";
-import Configuracoes from '../components/ModalConfiguracoes.vue'
+import { CogIcon,PlusIcon,MinusIcon } from "@heroicons/vue/solid";
 
 const escala = ref(1.0) 
 const proporcaoZomm = ref(0.5)
-let formaCont = 0
 const showConf = ref(false)
+const showZoom = ref(false)
+let formaCont = 0
 const dados: Dados = reactive({urlImage:"",width:0,height:0,widthRes:0,heightRes:0,ftConv:0})
 const formas = ref<Forma[]>([]) 
-const configuracao: Configuracao = reactive({tipo:"linha",cor:"#000000",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alphaCirculo:1,alphaLinha:1,habilitaConf:true,habilitaZoom: true,exibeID:true})
+const configuracao: Configuracao = reactive({tipo:"linha",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alphaCirculo:1,alphaLinha:1,habilitaConf:true,habilitaZoom: true,exibeID:true})
 let canvas: CanvasRenderingContext2D
 let canvasTemp:CanvasRenderingContext2D
 const formaDesenha = ref<Forma>() 
@@ -139,11 +135,6 @@ const zoomIn = () => {
     atualizaEscala()
 }
 
-//redefine o zoom do componente canvas
-const zoomRedefinir = () => {
-    escala.value = 1.0;
-    atualizaEscala()
-}
 
 //atualiza a escala do form principal
 const atualizaEscala = () => {
@@ -157,7 +148,7 @@ const atualizaEscala = () => {
 const linha = (forma: Forma, canva:CanvasRenderingContext2D) => {
     var ctx = canva;
     ctx.beginPath();
-    ctx.globalAlpha = configuracao.alphaLinha;
+    ctx.globalAlpha = configuracao.alpha;
     ctx.moveTo(forma.inicio[0], forma.inicio[1]);
     ctx.lineTo(forma.fim[0], forma.fim[1]);
     ctx.strokeStyle = forma.cor;
@@ -172,7 +163,7 @@ const linha = (forma: Forma, canva:CanvasRenderingContext2D) => {
 const circulo = (forma: Forma, canva:CanvasRenderingContext2D) => {
     var ctx = canva;
     ctx.beginPath();
-    ctx.globalAlpha = configuracao.alphaCirculo;
+    ctx.globalAlpha = configuracao.alpha;
     ctx.arc(forma.inicio[0], forma.inicio[1], configuracao.raioCirculo, 0, 2 * Math.PI);
     ctx.shadowColor = configuracao.corSombra;
     ctx.shadowBlur = configuracao.sombra;
@@ -184,7 +175,7 @@ const circulo = (forma: Forma, canva:CanvasRenderingContext2D) => {
 const quadrado = (forma: Forma, canva:CanvasRenderingContext2D) => {
     var ctx = canva;
     ctx.beginPath();
-    ctx.globalAlpha = configuracao.alphaLinha;
+    ctx.globalAlpha = configuracao.alpha;
     ctx.rect(forma.inicio[0], forma.inicio[1], forma.fim[0] - forma.inicio[0], forma.fim[1] - forma.inicio[1]);
     ctx.fillStyle = forma.cor;
     ctx.strokeStyle = forma.cor;
@@ -415,8 +406,7 @@ const configuraCanvas = (confs: Configuracao) => {
   configuracao.corSombra = confs.corSombra
   configuracao.sombra = confs.sombra
   configuracao.raioCirculo = confs.raioCirculo
-  configuracao.alphaCirculo = confs.alphaCirculo
-  configuracao.alphaLinha = confs.alphaLinha
+  configuracao.alpha = confs.alpha
   configuracao.habilitaZoom = confs.habilitaZoom
   configuracao.habilitaConf = confs.habilitaConf
   configuracao.exibeID = confs.exibeID
@@ -435,7 +425,8 @@ const destacaForma = (refer: number) => {
   console.log("arrar formas depois ",formas.value)
 }
 
-//desenha uma forma expecifica ou todas
+//desenha uma forma expecifica, ou todas as formas
+
 const desenhaForma = (refer:number) => {
   if(refer){
     let formaTot: Forma[] = formas.value.filter(e => e.referencia == refer)
