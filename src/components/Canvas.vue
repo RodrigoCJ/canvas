@@ -1,4 +1,11 @@
 <template>
+  <Configuracoes
+    class="flex h-screen"
+    @close="showConf = false"
+    v-if="showConf"
+    @drawConfigs="configuraCanvas"
+    :drawConfiguration="configuracao"
+  />
   <div>
     <div class="flex justify-center align-middle mb-5" v-if="configuracao.habilitaZoom==true">
       <div class="text-right text-sm">
@@ -14,7 +21,7 @@
           "
         >
           <span class="flex justify-center align-middle">
-            <ZoomInIcon class="w-6 h-6" />
+            ZOOM OUT
           </span>
         </button>
       </div>
@@ -34,7 +41,7 @@
           "
         >
           <span class="flex px-2 justify-center align-middle">
-           reset
+           REDEFINIR
           </span>
         </button>
       </div>
@@ -51,7 +58,26 @@
           "
         >
           <span class="flex justify-center align-middle">
-            <ZoomOutIcon class="w-6 h-6" />
+            ZOOM IN
+          </span>
+        </button>
+      </div>
+    </div>
+    <div class="flex justify-center align-middle mb-5" v-if="configuracao.habilitaConf==true">
+      <div class="text-right text-sm">
+        <button
+          @click="showConf = !showConf"
+          class="
+            p-4
+            bg-transparent
+            border-2 border-green-500
+            text-green-500 text-lg
+            rounded-full
+            hover:bg-green-500 hover:text-gray-100
+          "
+        >
+          <span class="flex justify-center align-middle">
+            CONFIGURACAO
           </span>
         </button>
       </div>
@@ -79,14 +105,15 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { Dados,Configuracao,Forma } from "../type/CanvasType";
-import { ZoomInIcon, ZoomOutIcon } from "@heroicons/vue/solid";
+import Configuracoes from '../components/ModalConfiguracoes.vue'
 
 const escala = ref(1.0) 
 const proporcaoZomm = ref(0.5)
 let formaCont = 0
+const showConf = ref(false)
 const dados: Dados = reactive({urlImage:"",width:0,height:0,widthRes:0,heightRes:0,ftConv:0})
 const formas = ref<Forma[]>([]) 
-const configuracao: Configuracao = reactive({tipo:"linha",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:1,habilitaConf:true,habilitaZoom: false,exibeID:true})
+const configuracao: Configuracao = reactive({tipo:"linha",cor:"#000000",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alphaCirculo:1,alphaLinha:1,habilitaConf:true,habilitaZoom: true,exibeID:true})
 let canvas: CanvasRenderingContext2D
 let canvasTemp:CanvasRenderingContext2D
 const formaDesenha = ref<Forma>() 
@@ -130,7 +157,7 @@ const atualizaEscala = () => {
 const linha = (forma: Forma, canva:CanvasRenderingContext2D) => {
     var ctx = canva;
     ctx.beginPath();
-    ctx.globalAlpha = configuracao.alpha;
+    ctx.globalAlpha = configuracao.alphaLinha;
     ctx.moveTo(forma.inicio[0], forma.inicio[1]);
     ctx.lineTo(forma.fim[0], forma.fim[1]);
     ctx.strokeStyle = forma.cor;
@@ -145,7 +172,7 @@ const linha = (forma: Forma, canva:CanvasRenderingContext2D) => {
 const circulo = (forma: Forma, canva:CanvasRenderingContext2D) => {
     var ctx = canva;
     ctx.beginPath();
-    ctx.globalAlpha = configuracao.alpha;
+    ctx.globalAlpha = configuracao.alphaCirculo;
     ctx.arc(forma.inicio[0], forma.inicio[1], configuracao.raioCirculo, 0, 2 * Math.PI);
     ctx.shadowColor = configuracao.corSombra;
     ctx.shadowBlur = configuracao.sombra;
@@ -157,7 +184,7 @@ const circulo = (forma: Forma, canva:CanvasRenderingContext2D) => {
 const quadrado = (forma: Forma, canva:CanvasRenderingContext2D) => {
     var ctx = canva;
     ctx.beginPath();
-    ctx.globalAlpha = configuracao.alpha;
+    ctx.globalAlpha = configuracao.alphaLinha;
     ctx.rect(forma.inicio[0], forma.inicio[1], forma.fim[0] - forma.inicio[0], forma.fim[1] - forma.inicio[1]);
     ctx.fillStyle = forma.cor;
     ctx.strokeStyle = forma.cor;
@@ -388,12 +415,14 @@ const configuraCanvas = (confs: Configuracao) => {
   configuracao.corSombra = confs.corSombra
   configuracao.sombra = confs.sombra
   configuracao.raioCirculo = confs.raioCirculo
-  configuracao.alpha = confs.alpha
+  configuracao.alphaCirculo = confs.alphaCirculo
+  configuracao.alphaLinha = confs.alphaLinha
   configuracao.habilitaZoom = confs.habilitaZoom
   configuracao.habilitaConf = confs.habilitaConf
   configuracao.exibeID = confs.exibeID
 }
 
+//desta uma forma expecifica em vermelho
 const destacaForma = (refer: number) => {
   console.log("arrar formas antes ",formas.value)
   let formaTot: Forma[] = formas.value.map(x => Object.assign({}, x));
@@ -406,6 +435,7 @@ const destacaForma = (refer: number) => {
   console.log("arrar formas depois ",formas.value)
 }
 
+//desenha uma forma expecifica ou todas
 const desenhaForma = (refer:number) => {
   if(refer){
     let formaTot: Forma[] = formas.value.filter(e => e.referencia == refer)
