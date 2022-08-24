@@ -57,6 +57,8 @@
       </div>
     </div>
 
+    <button @click="deletaForma(0)">AAAA</button>
+
     <!-- canvas -->
     <div id="baseDiv" class="baseDiv" style="overflow: none; width: 600px; height: 600px">
       <div
@@ -86,7 +88,7 @@ const proporcaoZomm = ref(0.5)
 let formaCont = 0
 const dados: Dados = reactive({urlImage:"",width:0,height:0,widthRes:0,heightRes:0,ftConv:0})
 const formas = ref<Forma[]>([]) 
-const configuracao: Configuracao = reactive({tipo:"linha",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:1,habilitaConf:true,habilitaZoom: true})
+const configuracao: Configuracao = reactive({tipo:"linha",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:1,habilitaConf:true,habilitaZoom: false})
 let canvas: CanvasRenderingContext2D
 let canvasTemp:CanvasRenderingContext2D
 const formaDesenha = ref<Forma>() 
@@ -198,6 +200,7 @@ const mouseClick = (ev: MouseEvent) => {
           formaDesenha.value = formaN
           }else{
             formaDesenha.value = undefined
+            exportaFormas(formaCont-1)
           }
           clearCanvas(canvasTemp)
           desenhaPerm(formas.value)
@@ -329,10 +332,8 @@ const tecladoEvent = (event: any) => {
   //ctrl + z
     //TODO: tratar
   if (event.ctrlKey && event.key === "z") {
-    console.log("ctrl + z")
     if (formas.value[formas.value.length-1].referencia==formaCont){
       var temp = formas.value.pop()
-      console.log("temp",temp)
       temp.fim = [] 
       formaDesenha.value = temp
       desenhaPerm(formas.value)
@@ -346,17 +347,36 @@ const importaFormas = () =>{
 }
 
 //exporta as formas do canvas para o componente pai
-const exportaFormas = () =>{
-  //TODO: fazer a exportacao de formas
+const exportaFormas = (refer?: number) =>{
+  if(refer){
+    let formaTot: Forma[] = formas.value.filter(e => e.referencia == refer)
+    emit("formas",formaTot)
+  }
+  else{
+    emit("formas",formas.value)
+  }
 }
 
 //apaga uma forma da lista de formas
-const deletaForma = (referencia: number) => {
-  //TODO: fazer a deleção de forma
+const deletaForma = (refer: number) => {
+  var i = -1
+  while ((i = formas.value.map(e => e.referencia).indexOf(refer)) != -1){
+    formas.value.splice(i,1)
+  }
+  desenhaPerm(formas.value)
 }
 
+//recebe as confs e aplica
 const configuraCanvas = (confs: Configuracao) => {
-  //TODO: receber as confs
+  configuracao.tipo = confs.tipo
+  configuracao.cor = confs.cor
+  configuracao.grossura = confs.grossura
+  configuracao.corSombra = confs.corSombra
+  configuracao.sombra = confs.sombra
+  configuracao.raioCirculo = confs.raioCirculo
+  configuracao.alpha = confs.alpha
+  configuracao.habilitaZoom = confs.habilitaZoom
+  configuracao.habilitaConf = confs.habilitaConf
 }
 
 defineExpose({
@@ -367,4 +387,7 @@ defineExpose({
   configuraCanvas
 })
 
+const emit = defineEmits([
+  "formas"
+])
 </script>
