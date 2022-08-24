@@ -57,8 +57,6 @@
       </div>
     </div>
 
-    <button @click="deletaForma(0)">AAAA</button>
-
     <!-- canvas -->
     <div id="baseDiv" class="baseDiv" style="overflow: none; width: 600px; height: 600px">
       <div
@@ -88,7 +86,7 @@ const proporcaoZomm = ref(0.5)
 let formaCont = 0
 const dados: Dados = reactive({urlImage:"",width:0,height:0,widthRes:0,heightRes:0,ftConv:0})
 const formas = ref<Forma[]>([]) 
-const configuracao: Configuracao = reactive({tipo:"linha",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:1,habilitaConf:true,habilitaZoom: false})
+const configuracao: Configuracao = reactive({tipo:"linha",cor:"#0000FF",grossura:3,corSombra:"",sombra:10,raioCirculo:5,alpha:1,habilitaConf:true,habilitaZoom: false,exibeID:true})
 let canvas: CanvasRenderingContext2D
 let canvasTemp:CanvasRenderingContext2D
 const formaDesenha = ref<Forma>() 
@@ -170,6 +168,13 @@ const quadrado = (forma: Forma, canva:CanvasRenderingContext2D) => {
     ctx.closePath();
 }
 
+//escreve na coordenada inicial da forma, a referencia dela
+const escreve = (forma: Forma,canva:CanvasRenderingContext2D) => {
+  var ctx = canva;
+  ctx.font = "15px Arial";
+  ctx.fillText(""+forma.referencia, forma.inicio[0], forma.inicio[1]-5);
+}
+
 //trata o evento do clic do mouse, o que vai ser desenhado na tela
 const mouseClick = (ev: MouseEvent) => {
     switch(configuracao.tipo){
@@ -232,14 +237,23 @@ const desenhaTemp = (ev: MouseEvent) => {
 //desenha no canvas permanente a lista de formas
 const desenhaPerm = (frm: Forma[]) => {
   clearCanvas(canvas)
+  var oldForm = -1
   for(let value of frm){
     switch(value.tipo){
       case "linha":
         circulo(value,canvas)
         linha(value,canvas)
+        if(configuracao.exibeID && oldForm != value.referencia){
+          oldForm = value.referencia
+          escreve(value,canvas)
+        }
       break;
       case "quadrado":
         quadrado(value,canvas)
+        if(configuracao.exibeID && oldForm != value.referencia){
+          oldForm = value.referencia  
+          escreve(value,canvas)
+        } 
       break;
     }
   }
@@ -360,7 +374,7 @@ const exportaFormas = (refer?: number) =>{
 //apaga uma forma da lista de formas
 const deletaForma = (refer: number) => {
   var i = -1
-  while ((i = formas.value.map(e => e.referencia).indexOf(refer)) != -1){
+  while ((i = formas.value.map(e => e.referencia).indexOf(parseInt(refer))) != -1){
     formas.value.splice(i,1)
   }
   desenhaPerm(formas.value)
@@ -377,6 +391,29 @@ const configuraCanvas = (confs: Configuracao) => {
   configuracao.alpha = confs.alpha
   configuracao.habilitaZoom = confs.habilitaZoom
   configuracao.habilitaConf = confs.habilitaConf
+  configuracao.exibeID = confs.exibeID
+}
+
+const destacaForma = (refer: number) => {
+  console.log("arrar formas antes ",formas.value)
+  let formaTot: Forma[] = formas.value.map(x => Object.assign({}, x));
+  for(let value of formaTot){
+    if(value.referencia == refer){
+      value.cor = "#fc0703"
+    }
+  }
+  desenhaPerm(formaTot)
+  console.log("arrar formas depois ",formas.value)
+}
+
+const desenhaForma = (refer:number) => {
+  if(refer){
+    let formaTot: Forma[] = formas.value.filter(e => e.referencia == refer)
+    desenhaPerm(formaTot)
+  }
+  else{
+    desenhaPerm(formas.value)
+  }
 }
 
 defineExpose({
@@ -384,7 +421,9 @@ defineExpose({
   importaFormas,
   exportaFormas,
   deletaForma,
-  configuraCanvas
+  configuraCanvas,
+  destacaForma,
+  desenhaForma,
 })
 
 const emit = defineEmits([

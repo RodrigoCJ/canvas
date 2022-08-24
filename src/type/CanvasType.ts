@@ -25,4 +25,5 @@ export type Configuracao ={
      alpha: number;
      habilitaZoom: boolean;
      habilitaConf: boolean;
+     exibeID: boolean;
 }
