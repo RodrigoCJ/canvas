@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div id="baseDiv" class="baseDiv" style="overflow: none; width: 600px; height: 600px">
+    <div id="baseDiv" class="baseDiv" style="overflow: auto; position: relative" >
       <div id="principal" style="position: relative; display: inline-block; transform-origin: 0% 0%">
         <img id="img" :src="dados.urlImage" style="grid-column: 1; grid-row: 1" alt="" />
         <canvas id="myCanvasTemp" style="position: absolute; top: 0; left: 0" />
@@ -9,8 +9,9 @@
           style="position: absolute; top: 0; left: 0"
           @mousedown="mouseClick($event)"
           @mousemove="desenhaTemp($event)"/>
+      </div>
 
-        <!-- incones de confs -->
+      <!-- incones de confs -->
         <div class="absolute bottom-0 right-0 grid grid-cols-1">
           <button class="w-6 bg-white rounded-full mb-2 mr-2 p-1" v-if="configuracao.habilitaZoom" @click="zoomIn()">
             <MinusIcon></MinusIcon>
@@ -90,9 +91,6 @@
               " id="rangeCircleRadius" />
             <p>{{ configuracao.alphaLinha }}</p>                                 
         </div>
-      </div>
-
-      
     </div>
   </div>
 </template>
@@ -131,7 +129,9 @@ const zoomOut = () => {
 
 //diminui o zoom do componente canvas
 const zoomIn = () => {
-    escala.value *= proporcaoZomm.value;
+    if (escala.value>1){
+      escala.value *= proporcaoZomm.value;
+    }
     atualizaEscala()
 }
 
