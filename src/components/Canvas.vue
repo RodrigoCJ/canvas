@@ -97,7 +97,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { Dados,Configuracao,Forma } from "../type/CanvasType";
+import { Dados,Configuracao,Forma,FormaDado } from "../type/CanvasType";
 import { CogIcon,PlusIcon,MinusIcon } from "@heroicons/vue/solid";
 
 const escala = ref(1.0) 
@@ -374,18 +374,20 @@ const tecladoEvent = (event: any) => {
 }
 
 //importa formas do componente pai para o canvas
-const importaFormas = () =>{
-  //TODO: fazer a importacao de formas
+const importaFormas = (form: FormaDado[]) =>{
+  //TODO: fazer a importacao de formas, e converter os pontos
+  formas.value.concat(dadoToForma(form))
 }
 
 //exporta as formas do canvas para o componente pai
 const exportaFormas = (refer?: number) =>{
+  //TODO: reconverter os pontos
   if(refer){
     let formaTot: Forma[] = formas.value.filter(e => e.referencia == refer)
-    emit("formas",formaTot)
+    emit("formas",formaToDado(formaTot))
   }
   else{
-    emit("formas",formas.value)
+    emit("formas",formaToDado(formas.value))
   }
 }
 
@@ -426,7 +428,6 @@ const destacaForma = (refer: number) => {
 }
 
 //desenha uma forma expecifica, ou todas as formas
-
 const desenhaForma = (refer:number) => {
   if(refer){
     let formaTot: Forma[] = formas.value.filter(e => e.referencia == refer)
@@ -436,6 +437,56 @@ const desenhaForma = (refer:number) => {
     desenhaPerm(formas.value)
   }
 }
+
+const converteOrigin = (valor: number[]) => {
+  let ftX = dados.width/dados.widthRes
+  let ftY = dados.height/dados.heightRes
+  return [Math.round(valor[0] * ftX), Math.round(valor[1] * ftY)];
+}
+
+const converteResize = (valor: number[]) => {
+  let ftX = dados.width/dados.widthRes
+  let ftY = dados.height/dados.heightRes
+  return [Math.round(valor[0] / ftX), Math.round(valor[1] / ftY)];
+}
+
+const formaToDado = (forma: Forma[]) =>{
+  let dadosEx: FormaDado[] = new Array()
+  let referencias = forma.map(x => x.referencia).filter(function(elem, index, self) {
+    return index === self.indexOf(elem);
+  })
+  console.log("lista formas ",forma)
+  console.log("lista referencia unica ",referencias)
+
+  for( let value of referencias){
+    let form = forma.filter(e => e.referencia == value)
+    console.log("lista forma especifica ",form)
+
+    let dado: FormaDado = {tipo: form[0].tipo, cor: form[0].cor, coordenadas: []}
+
+    for (let values of form){
+      dado.coordenadas.push(converteOrigin(values.inicio))
+    }
+    dadosEx.push(dado)
+  }
+
+  return dadosEx
+}
+
+const dadoToForma = (dado: FormaDado[]) => {
+  let formaEX: Forma[] = new Array()
+  let ref = formaCont+1
+  for(let value of dado){
+    for(let i = 1; i < value.coordenadas.length; i++ ){
+      let forma: Forma = {tipo: value.tipo, cor:value.cor, inicio: converteResize(value.coordenadas[i-1]), fim: converteResize(value.coordenadas[i]),referencia: ref}
+      formaEX.push(forma)
+    }
+    ref++
+  }
+
+  return formaEX
+}
+
 
 defineExpose({
   inicia,

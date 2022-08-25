@@ -28,3 +28,10 @@ export type Configuracao ={
      habilitaConf: boolean;
      exibeID: boolean;
 }
+
+export type FormaDado = {
+    tipo: "quadrado"|"linha";
+    cor: string;
+    coordenadas: number[][];
+}
+ 
