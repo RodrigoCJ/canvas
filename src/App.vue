@@ -25,7 +25,7 @@ export default {
     };
   },
   mounted(){
-    this.$refs.canva.inicia("https://user-images.githubusercontent.com/168927/183423599-66d9504d-f6f0-45d9-b78b-e4c60eb9ee06.png",600,600)
+    this.$refs.canva.inicia("https://images.pexels.com/photos/12161836/pexels-photo-12161836.jpeg",600,600)
   },
   methods: {
     deleta(){
